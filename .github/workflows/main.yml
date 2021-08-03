@@ -1,0 +1,22 @@
+name: Container Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '16'
+          distribution: 'adopt'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      - name: Build
+        env:
+          JIB_BASE_IMAGE_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          JIB_BASE_IMAGE_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        run: ./gradlew jib
