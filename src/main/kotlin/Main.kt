@@ -7,6 +7,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readBytes
 import io.ktor.client.statement.readText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.contentType
@@ -26,6 +27,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 const val API_BASE_URL = "https://api.poeditor.com/v2"
 const val API_TOKEN_ENV = "POEDITOR_API_TOKEN"
 const val PROJECT_ID_ENV = "POEDITOR_PROJECT_ID"
+const val FORCE_CONTENT_TYPE_ENV = "FORCED_CONTENT_TYPE"
 
 @Serializable
 data class PoEditorResponse(val response: ResponseStatus, val result: JsonElement? = null)
@@ -38,6 +40,7 @@ fun main() {
 
     val apiToken = System.getenv(API_TOKEN_ENV) ?: error("No value given for $API_TOKEN_ENV!")
     val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
+    val forcedContentType = System.getenv(FORCE_CONTENT_TYPE_ENV)?.let(ContentType::parse)
 
     val client = HttpClient {
         install(HttpTimeout) {
@@ -61,7 +64,7 @@ fun main() {
                 }
                 val (language) = match.destructured
 
-                exportAndReturnLanguage(client, apiToken, projectId, language, type)
+                exportAndReturnLanguage(client, apiToken, projectId, language, type, forcedContentType)
             }
         }
 
@@ -74,6 +77,7 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
     projectId: String,
     language: String,
     type: String,
+    forcedContentType: ContentType?,
 ) {
 
     val exportResponse: HttpResponse = client.submitForm(
@@ -102,5 +106,6 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
     val (url) = Json.decodeFromJsonElement<ExportResult>(result)
 
     val downloadResponse: HttpResponse = client.get(url)
-    call.respondBytes(downloadResponse.readBytes(), downloadResponse.contentType(), downloadResponse.status)
+    val contentType = forcedContentType ?: downloadResponse.contentType()
+    call.respondBytes(downloadResponse.readBytes(), contentType, downloadResponse.status)
 }
