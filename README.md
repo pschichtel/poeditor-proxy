@@ -8,8 +8,9 @@ Proxy requests for translations files through to poeditor.com's export API.
 
 There is not much to configure, the program takes settings from the following environment variables:
 
- * `POEDITOR_API_TOKEN`: The API token necessary to access the poeditor.com API
- * `POEDITOR_PROJECT_ID`: The ID of the translation project on poeditor.com
+ * `POEDITOR_API_TOKEN` (required): The API token necessary to access the poeditor.com API
+ * `POEDITOR_PROJECT_ID` (required): The ID of the translation project on poeditor.com
+ * `FORCED_CONTENT_TYPE` (optional): Overwrites the response content type from the export download.
 
 ## Endpoints
 
