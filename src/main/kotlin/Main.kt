@@ -1,3 +1,4 @@
+import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.client.HttpClient
 import io.ktor.client.features.HttpTimeout
@@ -15,6 +16,7 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.util.pipeline.PipelineContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -32,7 +34,7 @@ data class ResponseStatus(val status: String, val code: String, val message: Str
 @Serializable
 data class ExportResult(val url: String)
 
-fun main(args: Array<String>) {
+fun main() {
 
     val apiToken = System.getenv(API_TOKEN_ENV) ?: error("No value given for $API_TOKEN_ENV!")
     val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
@@ -50,44 +52,55 @@ fun main(args: Array<String>) {
             get("/export/{type}/{file}") {
                 val type = call.parameters["type"]!!
 
-                val file = call.parameters["file"]!!
+                val fileName = call.parameters["file"]!!
                 val regex = """([^.]+).*""".toRegex()
-                val match = regex.matchEntire(file)
+                val match = regex.matchEntire(fileName)
                 if (match == null) {
                     call.respondText(status = HttpStatusCode.BadRequest) { "File needs to be <language-code>.<ext> or just <language-code>!" }
                     return@get
                 }
                 val (language) = match.destructured
 
-                val exportResponse: HttpResponse = client.submitForm(
-                    url = "$API_BASE_URL/projects/export",
-                    formParameters = Parameters.build {
-                        append("api_token", apiToken)
-                        append("id", projectId)
-                        append("language", language.lowercase())
-                        append("type", type)
-                        // append("filters", "")
-                        append("order", "terms")
-                        // append("tags", "")
-                        // append("options", "")
-                    },
-                    encodeInQuery = false,
-                )
-
-                val text = exportResponse.readText()
-                val response = Json.decodeFromString<PoEditorResponse>(text)
-                val result = response.result
-                if (result == null) {
-                    call.respondText(exportResponse.contentType(), exportResponse.status) { text }
-                    return@get
-                }
-
-                val (url) = Json.decodeFromJsonElement<ExportResult>(result)
-
-                val downloadResponse: HttpResponse = client.get(url)
-                call.respondBytes(downloadResponse.readBytes(), downloadResponse.contentType(), downloadResponse.status)
+                exportAndReturnLanguage(client, apiToken, projectId, language, type)
             }
         }
 
     }.start(wait = true)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLanguage(
+    client: HttpClient,
+    apiToken: String,
+    projectId: String,
+    language: String,
+    type: String,
+) {
+
+    val exportResponse: HttpResponse = client.submitForm(
+        url = "$API_BASE_URL/projects/export",
+        formParameters = Parameters.build {
+            append("api_token", apiToken)
+            append("id", projectId)
+            append("language", language.lowercase())
+            append("type", type)
+            // append("filters", "")
+            append("order", "terms")
+            // append("tags", "")
+            // append("options", "")
+        },
+        encodeInQuery = false,
+    )
+
+    val text = exportResponse.readText()
+    val response = Json.decodeFromString<PoEditorResponse>(text)
+    val result = response.result
+    if (result == null) {
+        call.respondText(exportResponse.contentType(), exportResponse.status) { text }
+        return
+    }
+
+    val (url) = Json.decodeFromJsonElement<ExportResult>(result)
+
+    val downloadResponse: HttpResponse = client.get(url)
+    call.respondBytes(downloadResponse.readBytes(), downloadResponse.contentType(), downloadResponse.status)
 }
