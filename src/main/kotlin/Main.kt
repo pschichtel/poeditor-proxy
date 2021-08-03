@@ -6,6 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readBytes
 import io.ktor.client.statement.readText
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.response.respondBytes
@@ -46,16 +47,24 @@ fun main(args: Array<String>) {
     embeddedServer(Netty, port = 8080) {
 
         routing {
-            get("/export/{type}/{language}.json") {
+            get("/export/{type}/{file}") {
                 val type = call.parameters["type"]!!
-                val language = call.parameters["language"]!!
+
+                val file = call.parameters["file"]!!
+                val regex = """([^.]+).*""".toRegex()
+                val match = regex.matchEntire(file)
+                if (match == null) {
+                    call.respondText(status = HttpStatusCode.BadRequest) { "File needs to be <language-code>.<ext> or just <language-code>!" }
+                    return@get
+                }
+                val (language) = match.destructured
 
                 val exportResponse: HttpResponse = client.submitForm(
                     url = "$API_BASE_URL/projects/export",
                     formParameters = Parameters.build {
                         append("api_token", apiToken)
                         append("id", projectId)
-                        append("language", language)
+                        append("language", language.lowercase())
                         append("type", type)
                         // append("filters", "")
                         append("order", "terms")
@@ -70,12 +79,13 @@ fun main(args: Array<String>) {
                 val result = response.result
                 if (result == null) {
                     call.respondText(exportResponse.contentType(), exportResponse.status) { text }
-                } else {
-                    val (url) = Json.decodeFromJsonElement<ExportResult>(result)
-
-                    val downloadResponse: HttpResponse = client.get(url)
-                    call.respondBytes(downloadResponse.readBytes(), downloadResponse.contentType(), downloadResponse.status)
+                    return@get
                 }
+
+                val (url) = Json.decodeFromJsonElement<ExportResult>(result)
+
+                val downloadResponse: HttpResponse = client.get(url)
+                call.respondBytes(downloadResponse.readBytes(), downloadResponse.contentType(), downloadResponse.status)
             }
         }
 
