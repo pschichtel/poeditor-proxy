@@ -43,7 +43,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "16"
 }
 
@@ -59,6 +59,14 @@ jib {
         ports = listOf("8080")
     }
     to {
+        val dockerHubUsername = System.getenv("DOCKERHUB_USERNAME")
+        val dockerHubPassword = System.getenv("DOCKERHUB_PASSWORD")
+        if (dockerHubUsername != null && dockerHubPassword != null) {
+            auth {
+                username = dockerHubUsername
+                password = dockerHubPassword
+            }
+        }
         image = "pschichtel/$name:$version"
     }
 }
