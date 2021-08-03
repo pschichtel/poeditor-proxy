@@ -16,7 +16,11 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
       - name: Build
+        uses: gradle/gradle-build-action@v1.3.3
         env:
-          JIB_BASE_IMAGE_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          JIB_BASE_IMAGE_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-        run: ./gradlew jib
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        with:
+          arguments: jib
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
