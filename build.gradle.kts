@@ -58,4 +58,7 @@ jib {
     container {
         ports = listOf("8080")
     }
+    to {
+        image = "pschichtel/$name:$version"
+    }
 }
