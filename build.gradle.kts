@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("io.gitlab.arturbosch.detekt")
+    id("com.google.cloud.tools.jib")
     application
 }
 
@@ -48,4 +49,13 @@ tasks.withType<KotlinCompile>() {
 
 application {
     mainClass.set("MainKt")
+}
+
+jib {
+    from {
+        image = "adoptopenjdk/openjdk16:alpine-jre"
+    }
+    container {
+        ports = listOf("8080")
+    }
 }
