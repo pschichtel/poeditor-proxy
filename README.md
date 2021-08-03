@@ -8,12 +8,24 @@ Proxy requests for translations files through to poeditor.com's export API.
 
 There is not much to configure, the program takes settings from the following environment variables:
 
-* `POEDITOR_API_TOKEN`: The API token necessary to access the poeditor.com API
-* `POEDITOR_PROJECT_ID`: The ID of the translation project on poeditor.com
+ * `POEDITOR_API_TOKEN`: The API token necessary to access the poeditor.com API
+ * `POEDITOR_PROJECT_ID`: The ID of the translation project on poeditor.com
 
 ## Endpoints
 
-* `/export/{type}/{language}*`
+All endpoints are exposed on port `8080`.
+
+### `/export/{type}/{file}`
+
+#### Arguments
+
+ * `{type}`: file type of the file to be exported, check our [the documentation](https://poeditor.com/docs/api#projects_export)
+ * `{file}`: the name of the requested file. Must be either `{language}.{ext}` or just `{language}`.
+
+#### Examples
+
+ * `/export/key_value_json/en-US.json`
+ * `/export/po/en-US.po`
 
 ## API Limits
 
