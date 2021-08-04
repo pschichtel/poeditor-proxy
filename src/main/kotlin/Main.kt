@@ -34,6 +34,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
+import mu.KLogger
+import mu.KotlinLogging
 
 const val API_BASE_URL = "https://api.poeditor.com/v2"
 const val API_TOKEN_ENV = "POEDITOR_API_TOKEN"
@@ -57,6 +59,7 @@ fun main() {
     val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
     val forcedContentType = System.getenv(FORCE_CONTENT_TYPE_ENV)?.let(ContentType::parse)
     val disableCaching = System.getenv(NO_CACHE_ENV)?.let(String::toBoolean) ?: false
+    val logger = KotlinLogging.logger("poeditor-proxy")
 
     val cache = Cache.Builder()
         .maximumCacheSize(MAX_CACHE_SIZE)
@@ -99,6 +102,7 @@ fun main() {
                 exportAndReturnLanguage(
                     client,
                     cache,
+                    logger,
                     apiToken,
                     projectId,
                     language,
@@ -115,6 +119,7 @@ fun main() {
 private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLanguage(
     client: HttpClient,
     cache: Cache<String, ExportedFile>,
+    logger: KLogger,
     apiToken: String,
     projectId: String,
     language: String,
@@ -153,10 +158,11 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
         }
         result
     } catch (e: SerializationException) {
+        logger.error(e) { "Failed to process response!" }
         respondFromCacheOrError(
             cache,
             cacheKey,
-            "Deserialization failed",
+            "Deserialization failed: ${e.message}",
             exportResponse,
         )
         return
