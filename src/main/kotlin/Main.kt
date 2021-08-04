@@ -38,6 +38,7 @@ const val API_BASE_URL = "https://api.poeditor.com/v2"
 const val API_TOKEN_ENV = "POEDITOR_API_TOKEN"
 const val PROJECT_ID_ENV = "POEDITOR_PROJECT_ID"
 const val FORCE_CONTENT_TYPE_ENV = "FORCED_CONTENT_TYPE"
+const val NO_CACHE_ENV = "NO_CACHE"
 
 const val CONNECT_TIMEOUT_MILLIS = 2000L
 const val REQUEST_TIMEOUT_MILLIS = 10000L
@@ -54,6 +55,7 @@ fun main() {
     val apiToken = System.getenv(API_TOKEN_ENV) ?: error("No value given for $API_TOKEN_ENV!")
     val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
     val forcedContentType = System.getenv(FORCE_CONTENT_TYPE_ENV)?.let(ContentType::parse)
+    val disableCaching = System.getenv(NO_CACHE_ENV)?.let(String::toBoolean) ?: false
 
     val cache = Cache.Builder()
         .maximumCacheSize(MAX_CACHE_SIZE)
@@ -93,7 +95,16 @@ fun main() {
                 }
                 val (language) = match.destructured
 
-                exportAndReturnLanguage(client, cache, apiToken, projectId, language, type, forcedContentType)
+                exportAndReturnLanguage(
+                    client,
+                    cache,
+                    apiToken,
+                    projectId,
+                    language,
+                    type,
+                    forcedContentType,
+                    disableCaching,
+                )
             }
         }
     }.start(wait = true)
@@ -108,6 +119,7 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
     language: String,
     type: String,
     forcedContentType: ContentType?,
+    disableCaching: Boolean,
 ) {
     val cacheKey = "$language.$type"
     val exportResponse: HttpResponse = client.submitForm(
@@ -144,7 +156,9 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
     val downloadResponse: HttpResponse = client.get(url)
     val contentType = forcedContentType ?: downloadResponse.contentType()
     val data = downloadResponse.readBytes()
-    cache.put(cacheKey, ExportedFile(contentType, downloadResponse.status, data))
+    if (!disableCaching) {
+        cache.put(cacheKey, ExportedFile(contentType, downloadResponse.status, data))
+    }
     call.respondBytes(data, contentType, downloadResponse.status)
 }
 
