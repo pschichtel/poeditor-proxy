@@ -29,6 +29,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -138,16 +139,26 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
     )
 
     val text = exportResponse.readText()
-    val response = Json.decodeFromString<PoEditorResponse>(text)
-    val result = response.result
-    if (result == null) {
-        val cached = cache.get(cacheKey)
-        if (cached != null) {
-            call.response.header("X-POEditor-Reason", "${response.response.code} - ${response.response.message}")
-            call.respondBytes(cached.data, cached.contentType, cached.status)
-        } else {
-            call.respondText(exportResponse.contentType(), exportResponse.status) { text }
+    val result = try {
+        val response = Json.decodeFromString<PoEditorResponse>(text)
+        val result = response.result
+        if (result == null) {
+            respondFromCacheOrError(
+                cache,
+                cacheKey,
+                "${response.response.code} - ${response.response.message}",
+                exportResponse,
+            )
+            return
         }
+        result
+    } catch (e: SerializationException) {
+        respondFromCacheOrError(
+            cache,
+            cacheKey,
+            "Deserialization failed",
+            exportResponse,
+        )
         return
     }
 
@@ -160,6 +171,21 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
         cache.put(cacheKey, ExportedFile(contentType, downloadResponse.status, data))
     }
     call.respondBytes(data, contentType, downloadResponse.status)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.respondFromCacheOrError(
+    cache: Cache<String, ExportedFile>,
+    cacheKey: String,
+    reason: String,
+    response: HttpResponse,
+) {
+    val cached = cache.get(cacheKey)
+    if (cached != null) {
+        call.response.header("X-POEditor-Reason", reason)
+        call.respondBytes(cached.data, cached.contentType, cached.status)
+    } else {
+        call.respondText(response.contentType(), response.status) { response.readText() }
+    }
 }
 
 class ExportedFile(val contentType: ContentType?, val status: HttpStatusCode, val data: ByteArray)
