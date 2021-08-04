@@ -1,3 +1,4 @@
+import io.github.reactivecircus.cache4k.Cache
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
@@ -13,11 +14,13 @@ import io.ktor.features.CachingHeaders
 import io.ktor.http.CacheControl.NoStore
 import io.ktor.http.CacheControl.Visibility.Private
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.content.CachingOptions
 import io.ktor.http.contentType
+import io.ktor.response.header
 import io.ktor.response.respondBytes
 import io.ktor.response.respondText
 import io.ktor.routing.get
@@ -38,6 +41,7 @@ const val FORCE_CONTENT_TYPE_ENV = "FORCED_CONTENT_TYPE"
 
 const val CONNECT_TIMEOUT_MILLIS = 2000L
 const val REQUEST_TIMEOUT_MILLIS = 10000L
+const val MAX_CACHE_SIZE = 100L
 
 @Serializable
 data class PoEditorResponse(val response: ResponseStatus, val result: JsonElement? = null)
@@ -47,10 +51,13 @@ data class ResponseStatus(val status: String, val code: String, val message: Str
 data class ExportResult(val url: String)
 
 fun main() {
-
     val apiToken = System.getenv(API_TOKEN_ENV) ?: error("No value given for $API_TOKEN_ENV!")
     val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
     val forcedContentType = System.getenv(FORCE_CONTENT_TYPE_ENV)?.let(ContentType::parse)
+
+    val cache = Cache.Builder()
+        .maximumCacheSize(MAX_CACHE_SIZE)
+        .build<String, ExportedFile>()
 
     val client = HttpClient {
         install(HttpTimeout) {
@@ -86,7 +93,7 @@ fun main() {
                 }
                 val (language) = match.destructured
 
-                exportAndReturnLanguage(client, apiToken, projectId, language, type, forcedContentType)
+                exportAndReturnLanguage(client, cache, apiToken, projectId, language, type, forcedContentType)
             }
         }
     }.start(wait = true)
@@ -95,13 +102,14 @@ fun main() {
 @Suppress("LongParameterList")
 private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLanguage(
     client: HttpClient,
+    cache: Cache<String, ExportedFile>,
     apiToken: String,
     projectId: String,
     language: String,
     type: String,
     forcedContentType: ContentType?,
 ) {
-
+    val cacheKey = "$language.$type"
     val exportResponse: HttpResponse = client.submitForm(
         url = "$API_BASE_URL/projects/export",
         formParameters = Parameters.build {
@@ -121,7 +129,13 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
     val response = Json.decodeFromString<PoEditorResponse>(text)
     val result = response.result
     if (result == null) {
-        call.respondText(exportResponse.contentType(), exportResponse.status) { text }
+        val cached = cache.get(cacheKey)
+        if (cached != null) {
+            call.response.header("X-POEditor-Reason", "${response.response.code} - ${response.response.message}")
+            call.respondBytes(cached.data, cached.contentType, cached.status)
+        } else {
+            call.respondText(exportResponse.contentType(), exportResponse.status) { text }
+        }
         return
     }
 
@@ -129,5 +143,9 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
 
     val downloadResponse: HttpResponse = client.get(url)
     val contentType = forcedContentType ?: downloadResponse.contentType()
-    call.respondBytes(downloadResponse.readBytes(), contentType, downloadResponse.status)
+    val data = downloadResponse.readBytes()
+    cache.put(cacheKey, ExportedFile(contentType, downloadResponse.status, data))
+    call.respondBytes(data, contentType, downloadResponse.status)
 }
+
+class ExportedFile(val contentType: ContentType?, val status: HttpStatusCode, val data: ByteArray)

@@ -33,6 +33,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:2.0.10")
     implementation("ch.qos.logback:logback-classic:1.2.5")
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.3.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
