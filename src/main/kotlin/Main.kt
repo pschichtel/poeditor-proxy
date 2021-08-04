@@ -36,6 +36,9 @@ const val API_TOKEN_ENV = "POEDITOR_API_TOKEN"
 const val PROJECT_ID_ENV = "POEDITOR_PROJECT_ID"
 const val FORCE_CONTENT_TYPE_ENV = "FORCED_CONTENT_TYPE"
 
+const val CONNECT_TIMEOUT_MILLIS = 2000L
+const val REQUEST_TIMEOUT_MILLIS = 10000L
+
 @Serializable
 data class PoEditorResponse(val response: ResponseStatus, val result: JsonElement? = null)
 @Serializable
@@ -51,8 +54,8 @@ fun main() {
 
     val client = HttpClient {
         install(HttpTimeout) {
-            connectTimeoutMillis = 2000
-            requestTimeoutMillis = 10000
+            connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
+            requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
         }
     }
 
