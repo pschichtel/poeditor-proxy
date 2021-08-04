@@ -76,7 +76,9 @@ fun main() {
                 val regex = """([^.]+).*""".toRegex()
                 val match = regex.matchEntire(fileName)
                 if (match == null) {
-                    call.respondText(status = BadRequest) { "File needs to be <language-code>.<ext> or just <language-code>!" }
+                    call.respondText(status = BadRequest) {
+                        "File needs to be <language-code>.<ext> or just <language-code>!"
+                    }
                     return@get
                 }
                 val (language) = match.destructured
@@ -87,6 +89,7 @@ fun main() {
     }.start(wait = true)
 }
 
+@Suppress("LongParameterList")
 private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLanguage(
     client: HttpClient,
     apiToken: String,
