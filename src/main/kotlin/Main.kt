@@ -1,5 +1,6 @@
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
+import io.ktor.application.install
 import io.ktor.client.HttpClient
 import io.ktor.client.features.HttpTimeout
 import io.ktor.client.request.forms.submitForm
@@ -7,9 +8,15 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readBytes
 import io.ktor.client.statement.readText
+import io.ktor.features.CORS
+import io.ktor.features.CachingHeaders
+import io.ktor.http.CacheControl.NoStore
+import io.ktor.http.CacheControl.Visibility.Private
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
+import io.ktor.http.content.CachingOptions
 import io.ktor.http.contentType
 import io.ktor.response.respondBytes
 import io.ktor.response.respondText
@@ -50,7 +57,17 @@ fun main() {
     }
 
     embeddedServer(Netty, port = 8080) {
-
+        install(CORS) {
+            allowCredentials = true
+            allowNonSimpleContentTypes = true
+            anyHost()
+        }
+        install(CachingHeaders) {
+            options { response ->
+                if (response.status == OK) CachingOptions(NoStore(Private))
+                else null
+            }
+        }
         routing {
             get("/export/{type}/{file}") {
                 val type = call.parameters["type"]!!
@@ -59,7 +76,7 @@ fun main() {
                 val regex = """([^.]+).*""".toRegex()
                 val match = regex.matchEntire(fileName)
                 if (match == null) {
-                    call.respondText(status = HttpStatusCode.BadRequest) { "File needs to be <language-code>.<ext> or just <language-code>!" }
+                    call.respondText(status = BadRequest) { "File needs to be <language-code>.<ext> or just <language-code>!" }
                     return@get
                 }
                 val (language) = match.destructured
@@ -67,7 +84,6 @@ fun main() {
                 exportAndReturnLanguage(client, apiToken, projectId, language, type, forcedContentType)
             }
         }
-
     }.start(wait = true)
 }
 

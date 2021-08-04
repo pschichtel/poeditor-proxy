@@ -1,4 +1,3 @@
-
 rootProject.name = "poeditor-proxy"
 
 pluginManagement {
