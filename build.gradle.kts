@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("io.gitlab.arturbosch.detekt")
     id("com.google.cloud.tools.jib")
+    id("org.jlleitschuh.gradle.ktlint")
     application
 }
 
@@ -69,4 +70,8 @@ jib {
         }
         image = "pschichtel/$name:$version"
     }
+}
+
+ktlint {
+    setVersion("0.42.0")
 }
