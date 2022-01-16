@@ -49,6 +49,7 @@ const val NO_CACHE_ENV = "NO_CACHE"
 const val CONNECT_TIMEOUT_MILLIS = 2000L
 const val REQUEST_TIMEOUT_MILLIS = 10000L
 const val MAX_CACHE_SIZE = 100L
+const val BIND_PORT = 8080
 
 @Serializable
 data class PoEditorResponse(val response: ResponseStatus, val result: JsonElement? = null)
@@ -58,16 +59,19 @@ data class ResponseStatus(val status: String, val code: String, val message: Str
 data class ExportResult(val url: String)
 
 fun main() {
-    embeddedServer(Netty, environment = applicationEngineEnvironment {
-        rootPath = System.getenv("ROOT_PATH")?.trim() ?: ""
-        module {
-            setup()
+    embeddedServer(
+        factory = Netty,
+        environment = applicationEngineEnvironment {
+            rootPath = System.getenv("ROOT_PATH")?.trim() ?: ""
+            module {
+                setup()
+            }
+            connector {
+                port = BIND_PORT
+                host = "0.0.0.0"
+            }
         }
-        connector {
-            port = 8080
-            host = "0.0.0.0"
-        }
-    }).start(wait = true)
+    ).start(wait = true)
 }
 
 private fun Application.setup() {
