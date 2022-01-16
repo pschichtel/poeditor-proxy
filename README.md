@@ -46,3 +46,29 @@ Free accounts:
  * max 200 requests per minute
  * max 3600 requests per hour
  * max 1 upload request per 20 seconds
+
+# Reverse Proxy Configuration
+
+This services as basically no requirements for the reverse proxy in front of it and any reverse proxy should work without issues.
+
+If you want to deploy several instances of this service behind the same hostname+port, then you can use different path prefixes
+per instance. The prefix of an instance can be configured using the `ROOT_PATH` environment variable.
+
+A simple Nginx server configuration that proxies to two different instances depending on a path prefix:
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    location /project-a {
+        # docker run --rm -it -e ROOT_PATH=/project-a -e POEDITOR_PROJECT_ID=12345 -e POEDITOR_API_TOKEN=... -p 8080:8080 pschichtel/poeditor-proxy:1.0.0-SNAPSHOT
+        proxy_pass http://127.0.0.1:8080/project-a;
+    }   
+
+    location /project-b {
+        # docker run --rm -it -e ROOT_PATH=/project-b -e POEDITOR_PROJECT_ID=12346 -e POEDITOR_API_TOKEN=... -p 8081:8080 pschichtel/poeditor-proxy:1.0.0-SNAPSHOT
+        proxy_pass http://127.0.0.1:8081/project-b;
+    }   
+}
+```
