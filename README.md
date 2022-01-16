@@ -11,6 +11,7 @@ There is not much to configure, the program takes settings from the following en
  * `POEDITOR_API_TOKEN` (required): The API token necessary to access the poeditor.com API
  * `POEDITOR_PROJECT_ID` (required): The ID of the translation project on poeditor.com
  * `FORCED_CONTENT_TYPE` (optional): Overwrites the response content type from the export download.
+ * `ROOT_PATH` (optional): Configures a prefix for all routes. This can be used to host several instances of the proxy behind different path prefixes.
 
 ## Endpoints
 

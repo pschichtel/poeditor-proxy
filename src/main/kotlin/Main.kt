@@ -1,4 +1,5 @@
 import io.github.reactivecircus.cache4k.Cache
+import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
@@ -25,6 +26,8 @@ import io.ktor.response.respondBytes
 import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
+import io.ktor.server.engine.applicationEngineEnvironment
+import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.pipeline.PipelineContext
@@ -55,6 +58,19 @@ data class ResponseStatus(val status: String, val code: String, val message: Str
 data class ExportResult(val url: String)
 
 fun main() {
+    embeddedServer(Netty, environment = applicationEngineEnvironment {
+        rootPath = System.getenv("ROOT_PATH")?.trim() ?: ""
+        module {
+            setup()
+        }
+        connector {
+            port = 8080
+            host = "0.0.0.0"
+        }
+    }).start(wait = true)
+}
+
+private fun Application.setup() {
     val apiToken = System.getenv(API_TOKEN_ENV) ?: error("No value given for $API_TOKEN_ENV!")
     val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
     val forcedContentType = System.getenv(FORCE_CONTENT_TYPE_ENV)?.let(ContentType::parse)
@@ -72,47 +88,44 @@ fun main() {
         }
     }
 
-    embeddedServer(Netty, port = 8080) {
-        install(CORS) {
-            allowCredentials = true
-            allowNonSimpleContentTypes = true
-            anyHost()
+    install(CORS) {
+        allowNonSimpleContentTypes = true
+        anyHost()
+    }
+    install(CachingHeaders) {
+        options { response ->
+            if (response.status == OK) CachingOptions(NoStore(Private))
+            else null
         }
-        install(CachingHeaders) {
-            options { response ->
-                if (response.status == OK) CachingOptions(NoStore(Private))
-                else null
-            }
-        }
-        routing {
-            get("/export/{type}/{file}") {
-                val type = call.parameters["type"]!!
+    }
+    routing {
+        get("/export/{type}/{file}") {
+            val type = call.parameters["type"]!!
 
-                val fileName = call.parameters["file"]!!
-                val regex = """([^.]+).*""".toRegex()
-                val match = regex.matchEntire(fileName)
-                if (match == null) {
-                    call.respondText(status = BadRequest) {
-                        "File needs to be <language-code>.<ext> or just <language-code>!"
-                    }
-                    return@get
+            val fileName = call.parameters["file"]!!
+            val regex = """([^.]+).*""".toRegex()
+            val match = regex.matchEntire(fileName)
+            if (match == null) {
+                call.respondText(status = BadRequest) {
+                    "File needs to be <language-code>.<ext> or just <language-code>!"
                 }
-                val (language) = match.destructured
-
-                exportAndReturnLanguage(
-                    client,
-                    cache,
-                    logger,
-                    apiToken,
-                    projectId,
-                    language,
-                    type,
-                    forcedContentType,
-                    disableCaching,
-                )
+                return@get
             }
+            val (language) = match.destructured
+
+            exportAndReturnLanguage(
+                client,
+                cache,
+                logger,
+                apiToken,
+                projectId,
+                language,
+                type,
+                forcedContentType,
+                disableCaching,
+            )
         }
-    }.start(wait = true)
+    }
 }
 
 @Suppress("LongParameterList")

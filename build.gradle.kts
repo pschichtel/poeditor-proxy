@@ -17,10 +17,10 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "1.6.2"
-    val coroutinesVersion = "1.5.1"
-    val serializationVersion = "1.2.2"
-    val junitVersion = "5.3.1"
+    val ktorVersion = "1.6.7"
+    val coroutinesVersion = "1.6.0"
+    val serializationVersion = "1.3.2"
+    val junitVersion = "5.8.2"
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation(kotlin("stdlib-jdk8"))
@@ -31,9 +31,9 @@ dependencies {
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:2.0.10")
-    implementation("ch.qos.logback:logback-classic:1.2.5")
-    implementation("io.github.reactivecircus.cache4k:cache4k:0.3.0")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+    implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.4.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
@@ -46,7 +46,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "16"
+    kotlinOptions.jvmTarget = "17"
 }
 
 application {
@@ -55,7 +55,7 @@ application {
 
 jib {
     from {
-        image = "adoptopenjdk/openjdk16:alpine-jre"
+        image = "eclipse-temurin:17-jre-alpine"
     }
     container {
         ports = listOf("8080")
