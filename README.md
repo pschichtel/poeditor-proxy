@@ -1,6 +1,6 @@
 # poeditor-proxy
 
-This is a simple Kotlin based webserver that can proxy that has one job:
+This is a simple Kotlin based webserver that has one job:
 
 Proxy requests for translations files through to poeditor.com's export API.
 
