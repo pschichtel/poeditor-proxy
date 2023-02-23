@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -48,9 +48,12 @@ tasks.test {
     useJUnitPlatform()
 }
 
+val target = "17"
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(target))
+
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JVM_17)
+        jvmTarget.set(JvmTarget.fromTarget(target))
     }
 }
 
