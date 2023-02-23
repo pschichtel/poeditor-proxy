@@ -1,17 +1,13 @@
+package tel.schich.poeditorproxy
+
 import io.github.reactivecircus.cache4k.Cache
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCall
-import io.ktor.application.call
-import io.ktor.application.install
 import io.ktor.client.HttpClient
-import io.ktor.client.features.HttpTimeout
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.readBytes
-import io.ktor.client.statement.readText
-import io.ktor.features.CORS
-import io.ktor.features.CachingHeaders
 import io.ktor.http.CacheControl.NoStore
 import io.ktor.http.CacheControl.Visibility.Private
 import io.ktor.http.ContentType
@@ -21,15 +17,21 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.content.CachingOptions
 import io.ktor.http.contentType
-import io.ktor.response.header
-import io.ktor.response.respondBytes
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.routing
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.application.install
 import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.cachingheaders.CachingHeaders
+import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.response.header
+import io.ktor.server.response.respondBytes
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -53,8 +55,10 @@ const val BIND_PORT = 8080
 
 @Serializable
 data class PoEditorResponse(val response: ResponseStatus, val result: JsonElement? = null)
+
 @Serializable
 data class ResponseStatus(val status: String, val code: String, val message: String)
+
 @Serializable
 data class ExportResult(val url: String)
 
@@ -97,8 +101,8 @@ private fun Application.setup() {
         anyHost()
     }
     install(CachingHeaders) {
-        options { response ->
-            if (response.status == OK) CachingOptions(NoStore(Private))
+        options { call, _ ->
+            if (call.response.status() == OK) CachingOptions(NoStore(Private))
             else null
         }
     }
@@ -160,7 +164,7 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
         encodeInQuery = false,
     )
 
-    val text = exportResponse.readText()
+    val text = exportResponse.bodyAsText()
     val result = try {
         val response = Json.decodeFromString<PoEditorResponse>(text)
         val result = response.result
@@ -207,7 +211,7 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.respondFromCacheOrErr
         call.response.header("X-POEditor-Reason", reason)
         call.respondBytes(cached.data, cached.contentType, cached.status)
     } else {
-        call.respondText(response.contentType(), response.status) { response.readText() }
+        call.respondText(response.contentType(), response.status) { response.bodyAsText() }
     }
 }
 

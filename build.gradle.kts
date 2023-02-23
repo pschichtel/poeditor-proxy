@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -17,10 +18,12 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "1.6.7"
-    val coroutinesVersion = "1.6.0"
-    val serializationVersion = "1.3.2"
-    val junitVersion = "5.8.2"
+    implementation("io.ktor:ktor-server-cors-jvm:2.2.3")
+    implementation("io.ktor:ktor-server-caching-headers-jvm:2.2.3")
+    val ktorVersion = "2.2.3"
+    val coroutinesVersion = "1.6.4"
+    val serializationVersion = "1.4.1"
+    val junitVersion = "5.9.2"
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation(kotlin("stdlib-jdk8"))
@@ -31,9 +34,9 @@ dependencies {
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
-    implementation("ch.qos.logback:logback-classic:1.2.10")
-    implementation("io.github.reactivecircus.cache4k:cache4k:0.4.0")
+    implementation("io.github.microutils:kotlin-logging:3.0.5")
+    implementation("ch.qos.logback:logback-classic:1.4.5")
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.9.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
@@ -45,12 +48,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JVM_17)
+    }
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("tel.schich.poeditorproxy.MainKt")
 }
 
 jib {
