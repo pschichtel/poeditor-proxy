@@ -74,7 +74,7 @@ fun main() {
                 port = BIND_PORT
                 host = "0.0.0.0"
             }
-        }
+        },
     ).start(wait = true)
 }
 
@@ -102,8 +102,11 @@ private fun Application.setup() {
     }
     install(CachingHeaders) {
         options { call, _ ->
-            if (call.response.status() == OK) CachingOptions(NoStore(Private))
-            else null
+            if (call.response.status() == OK) {
+                CachingOptions(NoStore(Private))
+            } else {
+                null
+            }
         }
     }
     routing {
