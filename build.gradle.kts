@@ -18,9 +18,9 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-cors-jvm:2.2.3")
-    implementation("io.ktor:ktor-server-caching-headers-jvm:2.2.3")
-    val ktorVersion = "2.2.3"
+    implementation("io.ktor:ktor-server-cors-jvm:3.0.1")
+    implementation("io.ktor:ktor-server-caching-headers-jvm:3.0.1")
+    val ktorVersion = "3.0.1"
     val coroutinesVersion = "1.6.4"
     val serializationVersion = "1.4.1"
     val junitVersion = "5.9.2"
