@@ -23,7 +23,7 @@ dependencies {
     val ktorVersion = "2.2.3"
     val coroutinesVersion = "1.6.4"
     val serializationVersion = "1.4.1"
-    val junitVersion = "5.9.2"
+    val junitVersion = "5.11.3"
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation(kotlin("stdlib-jdk8"))
