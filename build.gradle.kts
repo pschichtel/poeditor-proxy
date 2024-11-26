@@ -22,7 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-server-caching-headers-jvm:2.2.3")
     val ktorVersion = "2.2.3"
     val coroutinesVersion = "1.6.4"
-    val serializationVersion = "1.4.1"
+    val serializationVersion = "1.7.3"
     val junitVersion = "5.9.2"
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
