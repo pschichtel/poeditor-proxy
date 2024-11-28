@@ -7,7 +7,7 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readBytes
+import io.ktor.client.statement.readRawBytes
 import io.ktor.http.CacheControl.NoStore
 import io.ktor.http.CacheControl.Visibility.Private
 import io.ktor.http.ContentType
@@ -18,10 +18,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.content.CachingOptions
 import io.ktor.http.contentType
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.application.install
-import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -30,12 +27,11 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.ktor.util.pipeline.PipelineContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -65,15 +61,15 @@ data class ExportResult(val url: String)
 fun main() {
     embeddedServer(
         factory = Netty,
-        environment = applicationEngineEnvironment {
-            rootPath = System.getenv("ROOT_PATH")?.trim() ?: ""
-            module {
-                setup()
-            }
+        configure = {
             connector {
                 port = BIND_PORT
                 host = "0.0.0.0"
             }
+        },
+        module = {
+            rootPath = System.getenv("ROOT_PATH")?.trim() ?: ""
+            setup()
         },
     ).start(wait = true)
 }
@@ -140,7 +136,7 @@ private fun Application.setup() {
 }
 
 @Suppress("LongParameterList")
-private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLanguage(
+private suspend fun RoutingContext.exportAndReturnLanguage(
     client: HttpClient,
     cache: Cache<String, ExportedFile>,
     logger: KLogger,
@@ -196,14 +192,14 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.exportAndReturnLangua
 
     val downloadResponse: HttpResponse = client.get(url)
     val contentType = forcedContentType ?: downloadResponse.contentType()
-    val data = downloadResponse.readBytes()
+    val data = downloadResponse.readRawBytes()
     if (!disableCaching) {
         cache.put(cacheKey, ExportedFile(contentType, downloadResponse.status, data))
     }
     call.respondBytes(data, contentType, downloadResponse.status)
 }
 
-private suspend fun PipelineContext<Unit, ApplicationCall>.respondFromCacheOrError(
+private suspend fun RoutingContext.respondFromCacheOrError(
     cache: Cache<String, ExportedFile>,
     cacheKey: String,
     reason: String,

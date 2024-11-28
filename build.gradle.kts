@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
@@ -18,12 +17,9 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-cors-jvm:2.2.3")
-    implementation("io.ktor:ktor-server-caching-headers-jvm:2.2.3")
-    val ktorVersion = "2.2.3"
-    val coroutinesVersion = "1.6.4"
-    val serializationVersion = "1.4.1"
-    val junitVersion = "5.9.2"
+    val ktorVersion = "3.0.1"
+    val coroutinesVersion = "1.9.0"
+    val serializationVersion = "1.7.3"
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation(kotlin("stdlib-jdk8"))
@@ -32,28 +28,24 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.4.5")
     implementation("io.github.reactivecircus.cache4k:cache4k:0.9.0")
-
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
-    testImplementation(kotlin("test-junit5"))
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-val target = "17"
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(target))
-
-tasks.withType<KotlinCompile>().configureEach {
+val javaTarget = 21
+kotlin {
+    jvmToolchain(javaTarget)
     compilerOptions {
-        jvmTarget.set(JvmTarget.fromTarget(target))
+        jvmTarget = JvmTarget.fromTarget(javaTarget.toString())
     }
 }
 
@@ -63,7 +55,7 @@ application {
 
 jib {
     from {
-        image = "eclipse-temurin:17-jre-alpine"
+        image = "eclipse-temurin:$javaTarget-jre-alpine"
     }
     container {
         ports = listOf("8080")
