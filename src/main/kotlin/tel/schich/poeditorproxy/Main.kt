@@ -81,9 +81,9 @@ private fun Application.setup() {
     val disableCaching = System.getenv(NO_CACHE_ENV)?.let(String::toBoolean) ?: false
     val logger = KotlinLogging.logger("poeditor-proxy")
 
-    val cache = Cache.Builder()
+    val cache = Cache.Builder<String, ExportedFile>()
         .maximumCacheSize(MAX_CACHE_SIZE)
-        .build<String, ExportedFile>()
+        .build()
 
     val client = HttpClient {
         install(HttpTimeout) {

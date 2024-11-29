@@ -6,7 +6,7 @@ ktor = "3.0.1"
 detekt = "1.23.6"
 jib = "3.4.4"
 ktlint = "11.2.0"
-cache4k = "0.9.0"
+cache4k = "0.13.0"
 logbackClassic = "1.5.12"
 kotlinLogging = "7.0.0"
 
