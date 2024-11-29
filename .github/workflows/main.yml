@@ -1,6 +1,8 @@
 name: Container Build
-
-on: [push]
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,11 +23,14 @@ jobs:
           arguments: check
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         uses: gradle/gradle-build-action@v1.3.3
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
         with:
           arguments: jib
           wrapper-cache-enabled: true
