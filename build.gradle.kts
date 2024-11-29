@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
-    id("io.gitlab.arturbosch.detekt")
-    id("com.google.cloud.tools.jib")
-    id("org.jlleitschuh.gradle.ktlint")
+    alias(libs.plugins.kotlinJvm)
+    alias(libs.plugins.kotlinKotlinxSerialization)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.jib)
+    alias(libs.plugins.ktlint)
     application
 }
 
@@ -17,24 +17,18 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "3.0.1"
-    val coroutinesVersion = "1.9.0"
-    val serializationVersion = "1.7.3"
-
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
-    implementation("io.ktor:ktor-server-cors:$ktorVersion")
-    implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-    implementation("io.github.microutils:kotlin-logging:3.0.5")
-    implementation("ch.qos.logback:logback-classic:1.4.5")
-    implementation("io.github.reactivecircus.cache4k:cache4k:0.9.0")
+    implementation(libs.ktorServerCore)
+    implementation(libs.ktorServerNetty)
+    implementation(libs.ktorServerCors)
+    implementation(libs.ktorServerCachingHeaders)
+    implementation(libs.ktorClientCore)
+    implementation(libs.ktorClientJava)
+    implementation(libs.ktorSerialization)
+    implementation(libs.kotlinxCoroutinesCore)
+    implementation(libs.kotlinxSerializationJson)
+    implementation(libs.kotlinLogging)
+    implementation(libs.logbackClassic)
+    implementation(libs.cache4k)
 }
 
 tasks.test {

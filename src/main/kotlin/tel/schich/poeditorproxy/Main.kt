@@ -1,5 +1,7 @@
 package tel.schich.poeditorproxy
 
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.reactivecircus.cache4k.Cache
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -35,8 +37,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
-import mu.KLogger
-import mu.KotlinLogging
 
 const val API_BASE_URL = "https://api.poeditor.com/v2"
 const val API_TOKEN_ENV = "POEDITOR_API_TOKEN"
