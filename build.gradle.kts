@@ -34,7 +34,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.4.5")
-    implementation("io.github.reactivecircus.cache4k:cache4k:0.9.0")
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.13.0")
 }
 
 tasks.test {
