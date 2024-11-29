@@ -60,5 +60,5 @@ jib {
 }
 
 ktlint {
-    setVersion("0.48.2")
+    version = "1.4.1"
 }

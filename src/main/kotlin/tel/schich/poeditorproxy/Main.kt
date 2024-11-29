@@ -50,13 +50,22 @@ const val MAX_CACHE_SIZE = 100L
 const val BIND_PORT = 8080
 
 @Serializable
-data class PoEditorResponse(val response: ResponseStatus, val result: JsonElement? = null)
+data class PoEditorResponse(
+    val response: ResponseStatus,
+    val result: JsonElement? = null,
+)
 
 @Serializable
-data class ResponseStatus(val status: String, val code: String, val message: String)
+data class ResponseStatus(
+    val status: String,
+    val code: String,
+    val message: String,
+)
 
 @Serializable
-data class ExportResult(val url: String)
+data class ExportResult(
+    val url: String,
+)
 
 fun main() {
     embeddedServer(
@@ -214,4 +223,8 @@ private suspend fun RoutingContext.respondFromCacheOrError(
     }
 }
 
-class ExportedFile(val contentType: ContentType?, val status: HttpStatusCode, val data: ByteArray)
+class ExportedFile(
+    val contentType: ContentType?,
+    val status: HttpStatusCode,
+    val data: ByteArray,
+)
