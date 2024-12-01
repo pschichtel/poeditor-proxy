@@ -8,7 +8,7 @@ jib = "3.4.4"
 ktlint = "12.1.2"
 cache4k = "0.13.0"
 logbackClassic = "1.5.12"
-kotlinLogging = "7.0.0"
+kotlinLogging = "7.0.3"
 
 [libraries]
 ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
