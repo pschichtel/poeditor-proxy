@@ -15,14 +15,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@f9c9c575b8b21b6485636a91ffecd10e558c62f6
-      - name: Check
-        uses: gradle/gradle-build-action@v3.5.0
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          arguments: check
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
+          distribution: 'temurin'
+          java-version: 17
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -30,8 +29,4 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
-        uses: gradle/gradle-build-action@v3.5.0
-        with:
-          arguments: jib
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
+        run: ./gradlew check tinyJibPublish
