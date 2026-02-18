@@ -35,7 +35,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-val javaTarget = 21
+val javaTarget = 25
 kotlin {
     jvmToolchain(javaTarget)
     compilerOptions {
