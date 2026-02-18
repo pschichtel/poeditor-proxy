@@ -9,6 +9,7 @@ ktlint = "14.0.1"
 cache4k = "0.14.0"
 logbackClassic = "1.5.32"
 kotlinLogging = "8.0.01"
+axionRelease = "1.21.1"
 
 [libraries]
 ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
@@ -30,3 +31,4 @@ kotlinKotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization",
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 tinyJib = { id = "tel.schich.tinyjib", version.ref = "tinyJib" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }

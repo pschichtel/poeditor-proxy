@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -6,11 +7,23 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.tinyJib)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.axionRelease)
     application
 }
 
+scmVersion {
+    tag {
+        prefix = "v"
+    }
+    nextVersion {
+        suffix = "SNAPSHOT"
+        separator = "-"
+    }
+    versionCreator = PredefinedVersionCreator.SIMPLE.versionCreator
+}
+
 group = "tel.schich"
-version = "1.0.0-SNAPSHOT"
+version = scmVersion.version
 
 repositories {
     mavenCentral()
