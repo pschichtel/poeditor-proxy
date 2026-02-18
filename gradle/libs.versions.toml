@@ -5,6 +5,7 @@ kotlinxCoroutines = "1.10.2"
 ktor = "3.4.0"
 detekt = "1.23.8"
 jib = "3.5.3"
+tinyJib = "0.2.4"
 ktlint = "14.0.1"
 cache4k = "0.14.0"
 logbackClassic = "1.5.32"
@@ -29,4 +30,5 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinKotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 jib = { id = "com.google.cloud.tools.jib", version.ref = "jib" }
+tinyJib = { id = "tel.schich.tinyjib", version.ref = "tinyJib" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

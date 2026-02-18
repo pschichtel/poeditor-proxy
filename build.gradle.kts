@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.kotlinKotlinxSerialization)
     alias(libs.plugins.detekt)
-    alias(libs.plugins.jib)
+    alias(libs.plugins.tinyJib)
     alias(libs.plugins.ktlint)
     application
 }
@@ -47,12 +47,13 @@ application {
     mainClass.set("tel.schich.poeditorproxy.MainKt")
 }
 
-jib {
+tinyJib {
     from {
         image = "eclipse-temurin:$javaTarget-jre-alpine"
     }
     container {
         ports = listOf("8080")
+        mainClass = application.mainClass
     }
     to {
         image = "ghcr.io/pschichtel/$name:$version"
