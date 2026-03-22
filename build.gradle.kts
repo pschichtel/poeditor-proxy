@@ -42,6 +42,9 @@ dependencies {
     implementation(libs.kotlinLogging)
     implementation(libs.logbackClassic)
     implementation(libs.cache4k)
+    implementation(libs.hopliteCore)
+    implementation(libs.hopliteYaml)
+    implementation(libs.hopliteWatch)
 }
 
 tasks.test {
