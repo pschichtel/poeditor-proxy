@@ -130,6 +130,12 @@ private fun Routing.route(
     cache: Cache<String, ExportedFile>,
     logger: KLogger,
 ) {
+    get("/liveness") {
+        call.respondText("OK")
+    }
+    get("/readiness") {
+        call.respondText("OK")
+    }
     get("/export/{project}/{type}/{file}") {
         val projectName = call.parameters.getOrFail("project")
         val type = call.parameters.getOrFail("type")
