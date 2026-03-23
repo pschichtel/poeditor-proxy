@@ -1,5 +1,6 @@
 package tel.schich.poeditorproxy
 
+import com.sksamuel.hoplite.watch.ReloadableConfig
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.reactivecircus.cache4k.Cache
@@ -30,6 +31,7 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.Routing
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -43,6 +45,7 @@ import java.nio.file.Paths
 
 const val API_BASE_URL = "https://api.poeditor.com/v2"
 
+const val DEFAULT_PORT = 8080
 const val CONNECT_TIMEOUT_MILLIS = 2000L
 const val REQUEST_TIMEOUT_MILLIS = 10000L
 const val MAX_CACHE_SIZE = 100L
@@ -71,7 +74,7 @@ fun main() {
         configure = {
             connector {
                 host = "0.0.0.0"
-                port = System.getenv("PORT")?.toInt() ?: 8080
+                port = System.getenv("PORT")?.toInt() ?: DEFAULT_PORT
             }
         },
         module = {
@@ -117,42 +120,51 @@ private fun Application.setup() {
         }
     }
     routing {
-        get("/export/{project}/{type}/{file}") {
-            val projectName = call.parameters.getOrFail("project")
-            val type = call.parameters.getOrFail("type")
-            val fileName = call.parameters.getOrFail("file")
+        route(config, client, cache, logger)
+    }
+}
 
-            val currentConfig = config.getLatest()
-            val project = currentConfig.projects[projectName]
-            if (project == null) {
-                call.respondText(status = NotFound) {
-                    "Project '$projectName' not found!"
-                }
-                return@get
+private fun Routing.route(
+    config: ReloadableConfig<Config>,
+    client: HttpClient,
+    cache: Cache<String, ExportedFile>,
+    logger: KLogger,
+) {
+    get("/export/{project}/{type}/{file}") {
+        val projectName = call.parameters.getOrFail("project")
+        val type = call.parameters.getOrFail("type")
+        val fileName = call.parameters.getOrFail("file")
+
+        val currentConfig = config.getLatest()
+        val project = currentConfig.projects[projectName]
+        if (project == null) {
+            call.respondText(status = NotFound) {
+                "Project '$projectName' not found!"
             }
-
-            val regex = """([^.]+).*""".toRegex()
-            val match = regex.matchEntire(fileName)
-            if (match == null) {
-                call.respondText(status = BadRequest) {
-                    "File needs to be <language-code>.<ext> or just <language-code>!"
-                }
-                return@get
-            }
-            val (language) = match.destructured
-
-            exportAndReturnLanguage(
-                client,
-                cache,
-                logger,
-                project.tokens.random(),
-                project.id,
-                language,
-                type,
-                project.forceContentType,
-                !project.caching,
-            )
+            return@get
         }
+
+        val regex = """([^.]+).*""".toRegex()
+        val match = regex.matchEntire(fileName)
+        if (match == null) {
+            call.respondText(status = BadRequest) {
+                "File needs to be <language-code>.<ext> or just <language-code>!"
+            }
+            return@get
+        }
+        val (language) = match.destructured
+
+        exportAndReturnLanguage(
+            client,
+            cache,
+            logger,
+            project.tokens.random(),
+            project.id,
+            language,
+            type,
+            project.forceContentType,
+            !project.caching,
+        )
     }
 }
 

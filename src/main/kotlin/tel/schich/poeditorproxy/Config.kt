@@ -2,7 +2,6 @@ package tel.schich.poeditorproxy
 
 import com.sksamuel.hoplite.ConfigFailure
 import com.sksamuel.hoplite.ConfigLoaderBuilder
-import com.sksamuel.hoplite.ConfigResult
 import com.sksamuel.hoplite.DecoderContext
 import com.sksamuel.hoplite.Node
 import com.sksamuel.hoplite.PropertySource
@@ -20,16 +19,13 @@ object ContentTypeDecoder : Decoder<ContentType> {
     override fun decode(
         node: Node,
         type: KType,
-        context: DecoderContext
-    ): ConfigResult<ContentType> {
-        return when (node) {
-            is StringNode -> ContentType.parse(node.value).valid()
-            else -> ConfigFailure.DecodeError(node, type).invalid()
-        }
+        context: DecoderContext,
+    ) = when (node) {
+        is StringNode -> ContentType.parse(node.value).valid()
+        else -> ConfigFailure.DecodeError(node, type).invalid()
     }
 
-    override fun supports(type: KType) =
-        type.classifier == ContentType::class
+    override fun supports(type: KType) = type.classifier == ContentType::class
 }
 
 data class Project(
@@ -39,7 +35,9 @@ data class Project(
     val caching: Boolean = true,
 )
 
-data class Config(val projects: Map<String, Project> = mapOf()) {
+data class Config(
+    val projects: Map<String, Project> = mapOf(),
+) {
     companion object {
         fun load(file: Path): ReloadableConfig<Config> {
             val fileWatcher = FileWatcher(file.parent.toString())
