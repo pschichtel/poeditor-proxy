@@ -15,6 +15,7 @@ import io.ktor.http.CacheControl.Visibility.Private
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.Parameters
 import io.ktor.http.content.CachingOptions
@@ -32,17 +33,15 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.ktor.server.util.getOrFail
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
+import java.nio.file.Paths
 
 const val API_BASE_URL = "https://api.poeditor.com/v2"
-const val API_TOKEN_ENV = "POEDITOR_API_TOKEN"
-const val PROJECT_ID_ENV = "POEDITOR_PROJECT_ID"
-const val FORCE_CONTENT_TYPE_ENV = "FORCED_CONTENT_TYPE"
-const val NO_CACHE_ENV = "NO_CACHE"
 
 const val CONNECT_TIMEOUT_MILLIS = 2000L
 const val REQUEST_TIMEOUT_MILLIS = 10000L
@@ -84,11 +83,15 @@ fun main() {
 }
 
 private fun Application.setup() {
-    val apiToken = System.getenv(API_TOKEN_ENV) ?: error("No value given for $API_TOKEN_ENV!")
-    val projectId = System.getenv(PROJECT_ID_ENV) ?: error("No value given for $PROJECT_ID_ENV!")
-    val forcedContentType = System.getenv(FORCE_CONTENT_TYPE_ENV)?.let(ContentType::parse)
-    val disableCaching = System.getenv(NO_CACHE_ENV)?.let(String::toBoolean) ?: false
     val logger = KotlinLogging.logger("poeditor-proxy")
+
+    val configPath = System.getenv("CONFIG_FILE")?.ifEmpty { null }
+        ?.let { Paths.get(it).toRealPath() }
+        ?: Paths.get(".").toRealPath().resolve("config.yml")
+    val config = Config.load(configPath)
+    config.subscribe {
+        logger.info { "Configuration reloaded!" }
+    }
 
     val cache = Cache.Builder<String, ExportedFile>()
         .maximumCacheSize(MAX_CACHE_SIZE)
@@ -115,10 +118,20 @@ private fun Application.setup() {
         }
     }
     routing {
-        get("/export/{type}/{file}") {
-            val type = call.parameters["type"]!!
+        get("/export/{project}/{type}/{file}") {
+            val projectName = call.parameters.getOrFail("project")
+            val type = call.parameters.getOrFail("type")
+            val fileName = call.parameters.getOrFail("file")
 
-            val fileName = call.parameters["file"]!!
+            val currentConfig = config.getLatest()
+            val project = currentConfig.projects[projectName]
+            if (project == null) {
+                call.respondText(status = NotFound) {
+                    "Project '$projectName' not found!"
+                }
+                return@get
+            }
+
             val regex = """([^.]+).*""".toRegex()
             val match = regex.matchEntire(fileName)
             if (match == null) {
@@ -133,12 +146,12 @@ private fun Application.setup() {
                 client,
                 cache,
                 logger,
-                apiToken,
-                projectId,
+                project.tokens.random(),
+                project.id,
                 language,
                 type,
-                forcedContentType,
-                disableCaching,
+                project.forceContentType,
+                !project.caching,
             )
         }
     }
