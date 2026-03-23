@@ -1,0 +1,20 @@
+name: Helm Chart Publish
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'helm/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
+      - name: Package Helm chart
+        run: helm package helm/
+      - name: Push Helm chart
+        run: helm push poeditor-proxy-*.tgz oci://ghcr.io/pschichtel/helm
