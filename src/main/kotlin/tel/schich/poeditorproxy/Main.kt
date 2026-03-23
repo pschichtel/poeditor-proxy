@@ -46,7 +46,6 @@ const val API_BASE_URL = "https://api.poeditor.com/v2"
 const val CONNECT_TIMEOUT_MILLIS = 2000L
 const val REQUEST_TIMEOUT_MILLIS = 10000L
 const val MAX_CACHE_SIZE = 100L
-const val BIND_PORT = 8080
 
 @Serializable
 data class PoEditorResponse(
@@ -71,8 +70,8 @@ fun main() {
         factory = Netty,
         configure = {
             connector {
-                port = BIND_PORT
                 host = "0.0.0.0"
+                port = System.getenv("PORT")?.toInt() ?: 8080
             }
         },
         module = {
