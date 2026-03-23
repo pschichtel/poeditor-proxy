@@ -2,8 +2,6 @@ name: Helm Chart Publish
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'helm/**'
   workflow_dispatch:
 
 jobs:
@@ -14,7 +12,19 @@ jobs:
       - uses: actions/checkout@v6
       - name: Login to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
+      - name: Check if version already published
+        id: check
+        run: |
+          VERSION=$(yq '.version' helm/Chart.yaml)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if helm show chart oci://ghcr.io/pschichtel/helm/poeditor-proxy --version "$VERSION" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Package Helm chart
+        if: steps.check.outputs.exists == 'false'
         run: helm package helm/
       - name: Push Helm chart
-        run: helm push poeditor-proxy-*.tgz oci://ghcr.io/pschichtel/helm
+        if: steps.check.outputs.exists == 'false'
+        run: helm push poeditor-proxy-${{ steps.check.outputs.version }}.tgz oci://ghcr.io/pschichtel/helm
