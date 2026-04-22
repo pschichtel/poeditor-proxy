@@ -28,7 +28,7 @@ spec:
     - host: {{ . | quote }}
       http:
         paths:
-          - path: {{ print .Values.rootPath "/export" }}
+          - path: {{ print $.Values.rootPath "/export" }}
             pathType: Prefix
             backend:
               service:
