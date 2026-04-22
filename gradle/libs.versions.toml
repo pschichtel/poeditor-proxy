@@ -2,7 +2,7 @@
 kotlin = "2.3.20"
 kotlinxSerializationJson = "1.11.0"
 kotlinxCoroutines = "1.10.2"
-ktor = "3.4.2"
+ktor = "3.4.3"
 detekt = "2.0.0-alpha.2"
 tinyJib = "0.3.4"
 ktlint = "14.2.0"
