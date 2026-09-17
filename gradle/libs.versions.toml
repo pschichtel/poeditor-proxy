@@ -2,14 +2,14 @@
 kotlin = "2.4.20"
 kotlinxSerializationJson = "1.11.0"
 kotlinxCoroutines = "1.11.0"
-ktor = "3.5.2"
+ktor = "3.6.0"
 detekt = "2.0.0-alpha.6"
 tinyJib = "0.4.0"
 ktlint = "14.2.0"
 cache4k = "0.14.0"
 logbackClassic = "1.6.3"
 kotlinLogging = "8.0.4"
-axionRelease = "1.21.3"
+axionRelease = "1.21.4"
 hoplite = "2.9.0"
 
 [libraries]
