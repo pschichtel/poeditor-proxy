@@ -10,7 +10,7 @@ cache4k = "0.14.0"
 logbackClassic = "1.6.5"
 kotlinLogging = "8.0.4"
 axionRelease = "1.21.4"
-hoplite = "3.0.1"
+hoplite = "3.0.3"
 
 [libraries]
 ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
